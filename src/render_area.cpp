@@ -77,23 +77,26 @@ namespace mousetrap
                 gdk_gl_context_make_current(detail::GL_CONTEXT);
                 glewExperimental = GL_FALSE;
                 glew_error = glewInit();
+								
+                if (glew_error != GLEW_ERROR_NO_GLX_DISPLAY)    // dirty patch
+								{
+                    if (glew_error != GLEW_NO_ERROR) {
+                        std::stringstream str;
+                        str << "In glewInit: Unable to initialize glew "
+                            << "(" << glew_error << ") ";
 
-                if (glew_error != GLEW_NO_ERROR)
-                {
-                    std::stringstream str;
-                    str << "In glewInit: Unable to initialize glew " << "(" << glew_error << ") ";
+                        if (glew_error == GLEW_ERROR_NO_GL_VERSION)
+                          str << "Missing GL version";
+                        else if (glew_error == GLEW_ERROR_GL_VERSION_10_ONLY)
+                          str << "Need at least OpenGL 1.1";
+                        else if (glew_error == GLEW_ERROR_GLX_VERSION_11_ONLY)
+                          str << "Need at least GLX 1.2";
+                        else if (glew_error == GLEW_ERROR_NO_GLX_DISPLAY)
+                          str << "Need GLX Display for GLX support";
 
-                    if (glew_error == GLEW_ERROR_NO_GL_VERSION)
-                        str << "Missing GL version";
-                    else if (glew_error == GLEW_ERROR_GL_VERSION_10_ONLY)
-                        str << "Need at least OpenGL 1.1";
-                    else if (glew_error == GLEW_ERROR_GLX_VERSION_11_ONLY)
-                        str << "Need at least GLX 1.2";
-                    else if (glew_error == GLEW_ERROR_NO_GLX_DISPLAY)
-                        str << "Need GLX Display for GLX support";
-
-                    log::warning(str.str(), MOUSETRAP_DOMAIN);
-                    goto failed;
+                        log::warning(str.str(), MOUSETRAP_DOMAIN);
+                        goto failed;
+                    }
                 }
 
                 g_object_ref_sink(GL_CONTEXT);
